@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,8 @@ import {
   getStreetLabelFromPlanification,
 } from "@/lib/geo";
 import { AuthModal } from "@/components/auth-modal";
+import { MotionPermissionBanner } from "@/components/motion-permission-banner";
+import { useImpactDetection } from "@/hooks/use-impact-detection";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const SnowMap = dynamic(() => import("@/components/map"), {
@@ -197,6 +199,51 @@ export default function MapApp() {
   >(null);
   const [reopenIncidentsListAfterReport, setReopenIncidentsListAfterReport] =
     useState(false);
+
+  const {
+    impactDetected,
+    clearImpact,
+    requestPermission,
+    permissionState,
+    isSupported: motionSupported,
+  } = useImpactDetection();
+
+  useLayoutEffect(() => {
+    if (!impactDetected) return;
+    clearImpact();
+
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (
+      typeof document !== "undefined" &&
+      document.visibilityState !== "visible"
+    )
+      return;
+
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      const nearest = findNearestStreetPlanification(
+        lat,
+        lng,
+        mergedPlanifications,
+      );
+      if (!nearest) return;
+      openIncidentReportDialog(
+        nearest.planification.coteRueId,
+        getStreetLabelFromPlanification(nearest.planification),
+        { lat, lng },
+      );
+      setPotholePriority("high");
+    });
+    // mergedPlanifications intentionally omitted — we want the value at impact time,
+    // not a new effect run on every map pan.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [impactDetected]);
 
   const resetPotholeForm = () => {
     setSelectedIncidentCoteRueId(null);
@@ -2503,6 +2550,15 @@ export default function MapApp() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          {/* Motion sensor banner – shown on mobile when permission not yet granted */}
+          {motionSupported && permissionState !== "granted" && (
+            <MotionPermissionBanner
+              permissionState={permissionState}
+              onRequestPermission={requestPermission}
+              darkMode={darkMode}
+            />
+          )}
 
           {/* Parking Location Dialog */}
           <Dialog open={showParkingDialog} onOpenChange={setShowParkingDialog}>
