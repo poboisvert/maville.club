@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
 interface Card {
   id: number;
   titleKey: string;
   descriptionKey: string;
-  image: string;
+  coords: string;
+  pinColor: string;
 }
 
 const cards: Card[] = [
@@ -17,86 +18,139 @@ const cards: Card[] = [
     id: 1,
     titleKey: "card1Title",
     descriptionKey: "card1Description",
-    image:
-      "https://images.pexels.com/photos/15229948/pexels-photo-15229948.jpeg?auto=compress&cs=tinysrgb&w=800",
+    coords: "45.5211° N",
+    pinColor: "bg-mtl-red",
   },
   {
     id: 2,
     titleKey: "card2Title",
     descriptionKey: "card2Description",
-    image:
-      "https://images.pexels.com/photos/19481829/pexels-photo-19481829.jpeg?auto=compress&cs=tinysrgb&w=800",
+    coords: "45.5048° N",
+    pinColor: "bg-mtl-blue",
   },
   {
     id: 3,
     titleKey: "card3Title",
     descriptionKey: "card3Description",
-    image:
-      "https://images.pexels.com/photos/20139664/pexels-photo-20139664.jpeg?auto=compress&cs=tinysrgb&w=800",
+    coords: "45.5430° N",
+    pinColor: "bg-mtl-blue-dark",
   },
   {
     id: 4,
     titleKey: "card4Title",
     descriptionKey: "card4Description",
-    image:
-      "https://images.pexels.com/photos/20131963/pexels-photo-20131963.jpeg?auto=compress&cs=tinysrgb&w=800",
+    coords: "45.4584° N",
+    pinColor: "bg-mtl-yellow",
   },
 ];
 
 function CardContent({
   card,
   isExpanded,
-  onExpand,
+  interactive = false,
+  onActivate,
 }: {
   card: Card;
   isExpanded: boolean;
-  onExpand: () => void;
+  interactive?: boolean;
+  onActivate?: () => void;
 }) {
   const { t } = useTranslation("common");
+  const title = t(`whyChooseUs.${card.titleKey}`);
+  const description = t(`whyChooseUs.${card.descriptionKey}`);
 
   return (
     <div
-      className='relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 ease-in-out h-[400px] lg:h-full'
-      onMouseEnter={() => !isExpanded && onExpand()}
-      onMouseLeave={() => isExpanded && onExpand()}
-      onClick={onExpand}
+      className={`group relative h-[360px] overflow-hidden rounded-xl border border-mtl-blue/15 bg-white shadow-md transition-[border-color,box-shadow] duration-500 ease-in-out lg:h-full ${
+        isExpanded
+          ? "border-mtl-blue/30 shadow-lg"
+          : "hover:border-mtl-blue/30 hover:shadow-lg"
+      } ${interactive ? "cursor-pointer" : ""}`}
+      onClick={interactive ? onActivate : undefined}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onActivate?.();
+              }
+            }
+          : undefined
+      }
     >
+      {/* Mini map grid inside card */}
       <div
-        className='absolute inset-0 bg-cover bg-center transition-transform duration-700'
+        aria-hidden
+        className='absolute inset-0 opacity-60'
         style={{
-          backgroundImage: `url('${card.image}')`,
-          transform: isExpanded ? "scale(1.1)" : "scale(1)",
+          backgroundImage: `
+            linear-gradient(rgba(0, 61, 165, 0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 61, 165, 0.06) 1px, transparent 1px)
+          `,
+          backgroundSize: "20px 20px",
         }}
       />
 
-      <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent' />
-
-      <div className='relative h-full flex flex-col justify-end p-8'>
+      {/* Map pin */}
+      <div className='absolute left-1/2 top-8 z-10 flex -translate-x-1/2 flex-col items-center'>
         <div
-          className={`transition-all duration-700 ${
-            isExpanded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
+          className={`flex h-10 w-10 items-center justify-center rounded-full shadow-lg ring-4 ring-white ${card.pinColor} transition-transform duration-500 ${isExpanded ? "scale-110" : ""}`}
         >
-          <h3 className='text-3xl font-bold text-white mb-4'>
-            {t(`whyChooseUs.${card.titleKey}`)}
-          </h3>
-          <p className='text-white/90 text-base leading-relaxed mb-6'>
-            {t(`whyChooseUs.${card.descriptionKey}`)}
-          </p>
-          <button className='flex items-center gap-2 text-white hover:gap-3 transition-all group'>
-            <span className='font-medium'>{t("whyChooseUs.learnMore")}</span>
-            <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
-          </button>
+          <MapPin
+            className={`h-5 w-5 ${card.pinColor.includes("yellow") ? "text-mtl-blue-dark" : "text-white"}`}
+          />
         </div>
+        <div className='h-4 w-0.5 bg-mtl-blue/30' />
+        <div className='h-2.5 w-2.5 rotate-45 rounded-sm bg-mtl-blue/15' />
+      </div>
+
+      <div className='relative flex h-full flex-col justify-end p-6 pt-24'>
+        <p className='mb-2 text-center font-mono text-[10px] uppercase tracking-widest text-mtl-blue/60'>
+          {card.coords}
+        </p>
 
         <div
-          className={`absolute bottom-8 left-8 transition-all duration-700 ${
-            isExpanded ? "opacity-0" : "opacity-100"
-          }`}
+          className='rounded-lg border border-mtl-blue/10 bg-white/95 p-4 shadow-sm backdrop-blur-sm'
         >
-          <h3 className='text-2xl font-bold text-white'>
-            {t(`whyChooseUs.${card.titleKey}`)}
+          <h3 className='mb-2 text-lg font-bold leading-tight text-mtl-blue-dark'>
+            {title}
           </h3>
+
+          <p
+            className={`hidden text-xs leading-relaxed text-slate-500 transition-opacity duration-500 lg:block ${
+              isExpanded ? "pointer-events-none h-0 overflow-hidden opacity-0" : "opacity-100"
+            }`}
+          >
+            {description.slice(0, 72)}…
+          </p>
+
+          <div
+            className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
+              isExpanded
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0 lg:grid-rows-[0fr] lg:opacity-0"
+            }`}
+          >
+            <div className='min-h-0 overflow-hidden'>
+              <p className='mb-4 pt-2 text-sm leading-relaxed text-slate-600 lg:pt-0'>
+                {description}
+              </p>
+              <span
+                className={`inline-flex items-center gap-1.5 text-sm font-medium text-mtl-blue transition-[gap] duration-300 ${
+                  isExpanded ? "gap-2.5" : ""
+                }`}
+              >
+                {t("whyChooseUs.learnMore")}
+                <ArrowRight
+                  className={`h-4 w-4 transition-transform duration-300 ${
+                    isExpanded ? "translate-x-1" : ""
+                  }`}
+                />
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -116,54 +170,46 @@ export function ExpandableCards() {
   );
 
   return (
-    <section className='py-4'>
+    <section className='py-2'>
       <div className='max-w-7xl mx-auto'>
-        {/* Mobile Carousel with Snap - All Cards Expanded */}
         <div
-          className='lg:hidden overflow-x-auto snap-x snap-mandatory scrollbar-hide px-2'
+          className='lg:hidden overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-2 px-2'
           ref={emblaRef}
-          style={{
-            WebkitOverflowScrolling: "touch",
-          }}
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className='flex gap-3'>
             {cards.map((card) => (
               <div
                 key={card.id}
-                className='flex-[0_0_92%] min-w-0 snap-center'
-                style={{ paddingRight: "0.5rem" }}
+                className='flex-[0_0_88%] min-w-0 snap-center'
               >
-                <CardContent
-                  card={card}
-                  isExpanded={true}
-                  onExpand={() => {}}
-                />
+                <CardContent card={card} isExpanded />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Desktop Expandable Cards */}
-        <div className='hidden lg:flex gap-4 h-[500px]'>
+        <div
+          className='hidden lg:flex lg:h-[340px] lg:gap-4'
+          onMouseLeave={() => setExpandedId(null)}
+        >
           {cards.map((card) => {
             const isExpanded = expandedId === card.id;
-            const hasExpanded = expandedId !== null;
-
             return (
               <div
                 key={card.id}
-                className={`transition-all duration-700 ease-in-out ${
-                  isExpanded
-                    ? "flex-[3]"
-                    : hasExpanded
-                    ? "flex-[0.7]"
-                    : "flex-1"
+                className={`min-h-0 min-w-0 transition-[flex-grow,flex-basis] duration-500 ease-in-out ${
+                  isExpanded ? "flex-[2]" : "flex-1"
                 }`}
+                onMouseEnter={() => setExpandedId(card.id)}
               >
                 <CardContent
                   card={card}
                   isExpanded={isExpanded}
-                  onExpand={() => setExpandedId(isExpanded ? null : card.id)}
+                  interactive
+                  onActivate={() =>
+                    setExpandedId(isExpanded ? null : card.id)
+                  }
                 />
               </div>
             );

@@ -13,10 +13,10 @@ const patrickHand = Patrick_Hand({
 });
 
 export const metadata: Metadata = {
-  title: "Neige.app | Déneigement intelligent à Montréal",
+  title: "MaVille.Club | Déneigement intelligent à Montréal",
   description:
-    "Neige.app est une plateforme intelligente de déneigement à Montréal. Suivi des opérations, alertes neige, état des rues et informations en temps réel pour citoyens et entreprises.",
-  applicationName: "Neige.app",
+    "MaVille.Club est une plateforme intelligente de déneigement à Montréal. Suivi des opérations, alertes neige, état des rues et informations en temps réel pour citoyens et entreprises.",
+  applicationName: "MaVille.Club",
   keywords: [
     "déneigement",
     "neige",
@@ -25,42 +25,42 @@ export const metadata: Metadata = {
     "état des rues",
     "alertes neige",
     "hiver Québec",
-    "neige.app",
+    "MaVille.Club",
   ],
-  authors: [{ name: "Neige.app" }],
-  creator: "Neige.app",
-  publisher: "Neige.app",
+  authors: [{ name: "MaVille.Club" }],
+  creator: "MaVille.Club",
+  publisher: "MaVille.Club",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#111827" },
     { media: "(prefers-color-scheme: dark)", color: "#111827" },
   ],
 
-  metadataBase: new URL("https://neige.app"),
+  metadataBase: new URL("https://www.maville.club"),
 
   openGraph: {
-    title: "Neige.app | Suivi du déneigement à Montréal",
+    title: "MaVille.Club | Suivi du déneigement à Montréal",
     description:
-      "Suivez le déneigement à Montréal : opérations en cours, alertes neige et état des rues en temps réel avec Neige.app.",
-    url: "https://neige.app",
-    siteName: "Neige.app",
+      "Suivez le déneigement à Montréal : opérations en cours, alertes neige et état des rues en temps réel avec MaVille.Club.",
+    url: "https://www.maville.Club",
+    siteName: "MaVille.Club",
     locale: "fr_CA",
     type: "website",
     images: [
       {
-        url: "https://info-neige-mtl.vercel.app/logo.png",
+        url: "https://www.maville.club/logo.png",
         width: 192,
         height: 192,
-        alt: "Neige.app Logo",
+        alt: "MaVille.Club Logo",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Neige.app | Déneigement à Montréal",
+    title: "MaVille.Club | Déneigement à Montréal",
     description:
       "Alertes neige, suivi du déneigement et état des rues à Montréal. Simple, clair et en temps réel.",
-    images: ["https://info-neige-mtl.vercel.app/logo.png"],
+    images: ["https://www.maville.club/logo.png"],
   },
 
   robots: {

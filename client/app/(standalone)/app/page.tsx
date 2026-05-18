@@ -16,6 +16,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   MapPin,
   Snowflake,
@@ -34,6 +42,8 @@ import {
   Navigation,
   Layers,
   Heart,
+  Construction,
+  Upload,
 } from "lucide-react";
 import {
   supabase,
@@ -43,12 +53,54 @@ import {
 } from "@/lib/auth";
 import { searchAddress, type GeocodingResult } from "@/lib/geocoding";
 import { getEtatDeneigColor, getEtatDeneigStatus } from "@/lib/constants";
+import {
+  findNearestStreetPlanification,
+  getStreetLabelFromPlanification,
+} from "@/lib/geo";
 import { AuthModal } from "@/components/auth-modal";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const SnowMap = dynamic(() => import("@/components/map"), {
   ssr: false,
 });
+
+type MapIncident = {
+  id: string;
+  cote_rue_id: number;
+  type: string;
+  photo_url: string | null;
+  priority: "low" | "medium" | "high";
+  is_approved: boolean;
+  created_at: string;
+};
+
+const INCIDENT_PRIORITY_LABELS: Record<MapIncident["priority"], string> = {
+  low: "Basse",
+  medium: "Moyenne",
+  high: "Haute",
+};
+
+/** Set when a sponsor image URL is available; null shows meme fallback. */
+const SPONSOR_AD: { imageUrl: string; href?: string; label?: string } | null =
+  null;
+
+const NO_SPONSOR_MEMES = [
+  {
+    src: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeWxkZWh5aW8yNzZwYjhrZnA5a3gydnUxNGowNWd2Y3p4MW95bnpmbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WRQBXSCnEFJIuxktnw/giphy.gif",
+    alt: "Cheems vibing",
+    caption: "Pas de pub. Que des vibes.",
+  },
+  {
+    src: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExenVmdGJsMmZoNG0xdzN1M3dqYTUyYWlvdDN6MzJ2dGYwZ210NGhpMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/IzBpqKzHLtfTa/giphy.gif",
+    alt: "Deal with it sunglasses",
+    caption: "Deal with it — sponsor introuvable",
+  },
+  {
+    src: "https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif",
+    alt: "Dance meme",
+    caption: "En attendant un vrai sponsor…",
+  },
+] as const;
 
 export default function MapApp() {
   const [planifications, setPlanifications] = useState<any[]>([]);
@@ -64,8 +116,16 @@ export default function MapApp() {
   const [selectedPlanif, setSelectedPlanif] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
-  const [filterMode, setFilterMode] = useState<"all" | "favorites">("all");
+  const [filterMode, setFilterMode] = useState<
+    "all" | "favorites" | "incidents"
+  >("all");
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(
+    null,
+  );
   const [darkMode, setDarkMode] = useState(true);
+  const [memeIndex, setMemeIndex] = useState(() =>
+    Math.floor(Math.random() * NO_SPONSOR_MEMES.length),
+  );
   const [searchLocation, setSearchLocation] = useState<{
     lat: number;
     lng: number;
@@ -77,7 +137,7 @@ export default function MapApp() {
     zoom?: number;
   }>({ lat: 45.5019, lng: -73.5674, zoom: 18 });
   const [searchSuggestions, setSearchSuggestions] = useState<GeocodingResult[]>(
-    []
+    [],
   );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [zoomTrigger, setZoomTrigger] = useState(0);
@@ -106,6 +166,49 @@ export default function MapApp() {
   const [municipalParking, setMunicipalParking] = useState<any[]>([]);
   const [showMunicipalParkingMessage, setShowMunicipalParkingMessage] =
     useState(false);
+  const [potholeModeEnabled, setPotholeModeEnabled] = useState(false);
+  const [showPotholeMessage, setShowPotholeMessage] = useState(false);
+  const [showPotholeDialog, setShowPotholeDialog] = useState(false);
+  const [selectedIncidentCoteRueId, setSelectedIncidentCoteRueId] = useState<
+    number | null
+  >(null);
+  const [selectedIncidentStreetLabel, setSelectedIncidentStreetLabel] =
+    useState<string | null>(null);
+  const [clickedIncidentLocation, setClickedIncidentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [potholePriority, setPotholePriority] = useState<
+    "low" | "medium" | "high"
+  >("medium");
+  const [potholePhoto, setPotholePhoto] = useState<File | null>(null);
+  const [potholePhotoPreview, setPotholePhotoPreview] = useState<string | null>(
+    null,
+  );
+  const [potholeSaving, setPotholeSaving] = useState(false);
+  const potholePhotoInputRef = useRef<HTMLInputElement>(null);
+  const [incidents, setIncidents] = useState<MapIncident[]>([]);
+  const [showIncidentsListDialog, setShowIncidentsListDialog] = useState(false);
+  const [listIncidentsCoteRueId, setListIncidentsCoteRueId] = useState<
+    number | null
+  >(null);
+  const [listIncidentsStreetLabel, setListIncidentsStreetLabel] = useState<
+    string | null
+  >(null);
+  const [reopenIncidentsListAfterReport, setReopenIncidentsListAfterReport] =
+    useState(false);
+
+  const resetPotholeForm = () => {
+    setSelectedIncidentCoteRueId(null);
+    setSelectedIncidentStreetLabel(null);
+    setClickedIncidentLocation(null);
+    setPotholePriority("medium");
+    setPotholePhoto(null);
+    if (potholePhotoPreview) {
+      URL.revokeObjectURL(potholePhotoPreview);
+    }
+    setPotholePhotoPreview(null);
+  };
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -126,9 +229,9 @@ export default function MapApp() {
       (error) => {
         console.error("Error getting location:", error);
         alert(
-          "Unable to retrieve your location. Please enable location services."
+          "Unable to retrieve your location. Please enable location services.",
         );
-      }
+      },
     );
   };
 
@@ -140,7 +243,7 @@ export default function MapApp() {
         minLng: number;
         maxLat: number;
         maxLng: number;
-      }
+      },
     ) => {
       setLoading(true);
       try {
@@ -165,7 +268,7 @@ export default function MapApp() {
           const transformedData = result.data
             .filter(
               (street: any) =>
-                street.deneigement_current && street.street_feature?.geometry
+                street.deneigement_current && street.street_feature?.geometry,
             )
             .map((street: any) => ({
               munid: 66023,
@@ -195,7 +298,7 @@ export default function MapApp() {
         }
       }
     },
-    []
+    [],
   );
 
   const handleBoundsChange = useCallback(
@@ -212,7 +315,7 @@ export default function MapApp() {
       setCurrentBounds(bounds);
       loadSnowPlanning(false, bounds);
     },
-    [loadSnowPlanning]
+    [loadSnowPlanning],
   );
 
   const loadFavorites = async () => {
@@ -260,7 +363,7 @@ export default function MapApp() {
             date_debut_replanif,
             date_fin_replanif,
             date_maj
-          )`
+          )`,
         )
         .in("cote_rue_id", favoriteIds);
 
@@ -274,7 +377,7 @@ export default function MapApp() {
       return data
         .filter(
           (street: any) =>
-            street.deneigement_current && street.street_feature?.geometry
+            street.deneigement_current && street.street_feature?.geometry,
         )
         .map((street: any) => ({
           munid: 66023,
@@ -381,11 +484,41 @@ export default function MapApp() {
   // The map will trigger handleBoundsChange once initialized (via MapBoundsTracker)
   // We skip the initial load since enableDynamicFetching is true
 
+  const loadIncidents = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("incidents")
+        .select(
+          "id, cote_rue_id, type, photo_url, priority, is_approved, created_at",
+        )
+        .eq("is_banned", false)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading incidents:", error);
+        throw error;
+      }
+
+      setIncidents((data as MapIncident[]) || []);
+    } catch (error) {
+      console.error("Error loading incidents:", error);
+    }
+  }, []);
+
   useEffect(() => {
     loadFavorites();
     loadParkingLocations();
     loadMunicipalParking();
-  }, [user]);
+    loadIncidents();
+  }, [user, loadIncidents]);
+
+  useEffect(() => {
+    if (SPONSOR_AD) return;
+    const interval = setInterval(() => {
+      setMemeIndex((i) => (i + 1) % NO_SPONSOR_MEMES.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadParkingLocations = async () => {
     if (!user) {
@@ -429,18 +562,135 @@ export default function MapApp() {
     }
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
-    // Only handle map click if parking mode is enabled
-    if (!parkingModeEnabled) return;
+  const openIncidentReportDialog = (
+    coteRueId: number,
+    streetLabel?: string,
+    location?: { lat: number; lng: number },
+  ) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    setClickedIncidentLocation(location ?? null);
+    setSelectedIncidentCoteRueId(coteRueId);
+    setSelectedIncidentStreetLabel(streetLabel ?? `Côté de rue #${coteRueId}`);
+    setPotholePriority("medium");
+    setPotholePhoto(null);
+    if (potholePhotoPreview) {
+      URL.revokeObjectURL(potholePhotoPreview);
+    }
+    setPotholePhotoPreview(null);
+    setShowPotholeDialog(true);
+  };
+
+  const handleIncidentStreetSelect = (
+    coteRueId: number,
+    streetLabel?: string,
+    location?: { lat: number; lng: number },
+  ) => {
+    if (!potholeModeEnabled) return;
+    openIncidentReportDialog(coteRueId, streetLabel, location);
+  };
+
+  const handleAddIncidentFromList = () => {
+    if (listIncidentsCoteRueId == null) return;
 
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    setClickedParkingLocation({ lat, lng });
-    setParkingName("");
-    setParkingNotes("");
-    setShowParkingDialog(true);
+
+    setReopenIncidentsListAfterReport(true);
+    setShowIncidentsListDialog(false);
+    openIncidentReportDialog(
+      listIncidentsCoteRueId,
+      listIncidentsStreetLabel ?? undefined,
+    );
+  };
+
+  const handlePotholePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Veuillez sélectionner une image.");
+      return;
+    }
+
+    if (potholePhotoPreview) {
+      URL.revokeObjectURL(potholePhotoPreview);
+    }
+
+    setPotholePhoto(file);
+    setPotholePhotoPreview(URL.createObjectURL(file));
+  };
+
+  const savePotholeIssue = async () => {
+    if (!user || selectedIncidentCoteRueId == null) return;
+
+    if (!potholePhoto) {
+      alert("Veuillez ajouter une photo.");
+      return;
+    }
+
+    setPotholeSaving(true);
+    try {
+      const fileExt = potholePhoto.name.split(".").pop() || "jpg";
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("incident-photos")
+        .upload(filePath, potholePhoto, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Error uploading incident photo:", uploadError);
+        throw uploadError;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("incident-photos").getPublicUrl(filePath);
+
+      const { error } = await supabase.from("incidents").insert({
+        cote_rue_id: selectedIncidentCoteRueId,
+        type: "pot_hole",
+        photo_url: publicUrl,
+        priority: potholePriority,
+        is_approved: false,
+        is_banned: false,
+        reported_by: user.id,
+      });
+
+      if (error) {
+        console.error("Error saving incident:", error);
+        throw error;
+      }
+
+      const savedCoteRueId = selectedIncidentCoteRueId;
+      const savedStreetLabel = selectedIncidentStreetLabel;
+      const shouldReopenList = reopenIncidentsListAfterReport;
+
+      setShowPotholeDialog(false);
+      resetPotholeForm();
+      setPotholeModeEnabled(false);
+      setReopenIncidentsListAfterReport(false);
+      await loadIncidents();
+
+      if (shouldReopenList && savedCoteRueId != null) {
+        setListIncidentsCoteRueId(savedCoteRueId);
+        setListIncidentsStreetLabel(savedStreetLabel);
+        setShowIncidentsListDialog(true);
+      }
+    } catch (error) {
+      console.error("Error saving incident:", error);
+      alert("Impossible d'enregistrer le signalement. Réessayez.");
+    } finally {
+      setPotholeSaving(false);
+    }
   };
 
   const saveParkingLocation = async () => {
@@ -515,7 +765,7 @@ export default function MapApp() {
           console.log("New notification", payload.new);
           setNotifications((n) => [payload.new, ...n]);
           setNotificationCollapsed(false);
-        }
+        },
       )
       .subscribe();
 
@@ -526,7 +776,7 @@ export default function MapApp() {
 
   // State to hold favorite planifications
   const [favoritePlanifications, setFavoritePlanifications] = useState<any[]>(
-    []
+    [],
   );
 
   // Load favorite planifications when favorites change
@@ -559,7 +809,7 @@ export default function MapApp() {
   const filteredPlanifications = useMemo(() => {
     if (filterMode === "favorites") {
       const favoriteStreets = mergedPlanifications.filter((p: any) =>
-        favorites.has(p.coteRueId)
+        favorites.has(p.coteRueId),
       );
 
       // Add parking locations to favorites view
@@ -573,6 +823,118 @@ export default function MapApp() {
     }
     return mergedPlanifications;
   }, [mergedPlanifications, filterMode, favorites, parkingLocations]);
+
+  const incidentCoteRueIds = useMemo(
+    () => new Set(incidents.map((i) => i.cote_rue_id)),
+    [incidents],
+  );
+
+  const planificationsForMap = useMemo(() => {
+    if (filterMode !== "incidents" || incidentCoteRueIds.size === 0) {
+      return planifications;
+    }
+
+    const byId = new Map(
+      planifications.map((p: any) => [p.coteRueId, p] as const),
+    );
+    for (const planif of mergedPlanifications) {
+      if (
+        incidentCoteRueIds.has(planif.coteRueId) &&
+        !byId.has(planif.coteRueId)
+      ) {
+        byId.set(planif.coteRueId, planif);
+      }
+    }
+    return Array.from(byId.values());
+  }, [filterMode, planifications, mergedPlanifications, incidentCoteRueIds]);
+
+  const incidentsForList = useMemo(() => {
+    if (listIncidentsCoteRueId == null) return [];
+    return incidents.filter((i) => i.cote_rue_id === listIncidentsCoteRueId);
+  }, [incidents, listIncidentsCoteRueId]);
+
+  const handleIncidentMarkerClick = (coteRueId: number) => {
+    const planif = mergedPlanifications.find(
+      (p: any) => p.coteRueId === coteRueId,
+    );
+    setListIncidentsCoteRueId(coteRueId);
+    setListIncidentsStreetLabel(
+      planif
+        ? getStreetLabelFromPlanification(planif)
+        : `Côté de rue #${coteRueId}`,
+    );
+    setShowIncidentsListDialog(true);
+  };
+
+  const focusIncidentOnMap = useCallback(
+    (incident: MapIncident) => {
+      setSelectedIncidentId(incident.id);
+      const planif = mergedPlanifications.find(
+        (p: any) => p.coteRueId === incident.cote_rue_id,
+      );
+      if (planif) {
+        setSelectedPlanif(planif);
+        setZoomTrigger((prev) => prev + 1);
+        return;
+      }
+      handleIncidentMarkerClick(incident.cote_rue_id);
+    },
+    [mergedPlanifications],
+  );
+
+  const prevFilterModeRef = useRef(filterMode);
+  useEffect(() => {
+    const enteredIncidents =
+      filterMode === "incidents" && prevFilterModeRef.current !== "incidents";
+    if (enteredIncidents && incidents.length > 0) {
+      focusIncidentOnMap(incidents[0]);
+    }
+    if (filterMode !== "incidents") {
+      setSelectedIncidentId(null);
+    }
+    prevFilterModeRef.current = filterMode;
+  }, [filterMode, incidents, focusIncidentOnMap]);
+
+  const handleMapClick = (lat: number, lng: number) => {
+    if (potholeModeEnabled) {
+      if (!user) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      const nearest = findNearestStreetPlanification(
+        lat,
+        lng,
+        mergedPlanifications,
+      );
+
+      if (!nearest) {
+        alert(
+          "Aucune rue trouvée à proximité. Zoomez et cliquez plus près d'une rue.",
+        );
+        return;
+      }
+
+      handleIncidentStreetSelect(
+        nearest.planification.coteRueId,
+        getStreetLabelFromPlanification(nearest.planification),
+        { lat, lng },
+      );
+      return;
+    }
+
+    if (!parkingModeEnabled) return;
+
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    setClickedParkingLocation({ lat, lng });
+    setParkingName("");
+    setParkingNotes("");
+    setShowParkingDialog(true);
+  };
 
   const handleSearchInputChange = async (value: string) => {
     setSearchQuery(value);
@@ -649,6 +1011,94 @@ export default function MapApp() {
     };
   }, []);
 
+  const renderIncidentSidebarItem = (incident: MapIncident) => {
+    const planif = mergedPlanifications.find(
+      (p: any) => p.coteRueId === incident.cote_rue_id,
+    );
+    const streetLabel = planif
+      ? getStreetLabelFromPlanification(planif)
+      : `Côté de rue #${incident.cote_rue_id}`;
+    const isSelected = selectedIncidentId === incident.id;
+
+    return (
+      <div
+        key={incident.id}
+        className={`p-3 rounded-lg border transition-all cursor-pointer ${
+          isSelected
+            ? darkMode
+              ? "bg-orange-900/30 border-orange-500"
+              : "bg-orange-50 border-orange-400"
+            : darkMode
+              ? "bg-gray-700 border-gray-600 hover:bg-orange-900/20 hover:border-orange-500"
+              : "bg-gray-50 border-gray-200 hover:bg-orange-50 hover:border-orange-300"
+        }`}
+        onClick={() => {
+          focusIncidentOnMap(incident);
+          setSidebarOpen(false);
+        }}
+      >
+        <div className='flex items-start gap-2'>
+          <Construction
+            className={`h-4 w-4 shrink-0 mt-0.5 ${
+              darkMode ? "text-orange-400" : "text-orange-600"
+            }`}
+          />
+          <div className='space-y-1 min-w-0 flex-1'>
+            <p
+              className={`font-medium text-sm truncate ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {streetLabel}
+            </p>
+            <div className='flex flex-wrap items-center gap-2'>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  incident.priority === "high"
+                    ? darkMode
+                      ? "bg-red-900/60 text-white"
+                      : "bg-red-100 text-red-800"
+                    : incident.priority === "medium"
+                      ? darkMode
+                        ? "bg-orange-900/60 text-white"
+                        : "bg-orange-100 text-orange-800"
+                      : darkMode
+                        ? "bg-gray-600 text-white"
+                        : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {INCIDENT_PRIORITY_LABELS[incident.priority]}
+              </span>
+              {incident.is_approved && (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    darkMode
+                      ? "bg-green-900/60 text-white"
+                      : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  Approuvé
+                </span>
+              )}
+            </div>
+            <p
+              className={`text-xs ${darkMode ? "text-white" : "text-gray-500"}`}
+            >
+              {new Date(incident.created_at).toLocaleString("fr-CA")}
+            </p>
+          </div>
+        </div>
+        {incident.photo_url && (
+          <img
+            src={incident.photo_url}
+            alt='Photo du signalement'
+            className='mt-2 w-full h-20 object-cover rounded-md border'
+          />
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       className={`h-screen flex flex-col overflow-hidden ${
@@ -689,7 +1139,7 @@ export default function MapApp() {
               darkMode ? "text-gray-100" : "text-gray-900"
             } flex items-baseline`}
           >
-            <span className='font-patrick-hand text-3xl'>Neige.app</span>
+            <span className='font-patrick-hand text-3xl'>MaVille.Club</span>
           </h1>
         </div>
         <Button
@@ -838,7 +1288,7 @@ export default function MapApp() {
                       </p>
                       <p className='text-white/70 text-xs mt-1'>
                         {new Date(
-                          notifications[0].created_at
+                          notifications[0].created_at,
                         ).toLocaleTimeString()}
                       </p>
                     </div>
@@ -865,18 +1315,29 @@ export default function MapApp() {
             >
               {loading && !hasInitialBounds
                 ? "Loading..."
-                : `${filteredPlanifications.length} ${
-                    filteredPlanifications.length === 1 ? "item" : "items"
-                  }${filterMode === "favorites" ? " (Favoris & parking)" : ""}`}
+                : filterMode === "incidents"
+                  ? `${incidents.length} signalement${
+                      incidents.length === 1 ? "" : "s"
+                    } (plus récents en premier)`
+                  : filterMode === "all"
+                    ? `${filteredPlanifications.length} rue${
+                        filteredPlanifications.length === 1 ? "" : "s"
+                      }${incidents.length > 0 ? ` · ${incidents.length} signalement${incidents.length === 1 ? "" : "s"}` : ""}`
+                    : `${filteredPlanifications.length} ${
+                        filteredPlanifications.length === 1 ? "item" : "items"
+                      }${filterMode === "favorites" ? " (Favoris & parking)" : ""}`}
             </p>
             <div className='mb-3 flex justify-center'>
               <SegmentControl
                 options={[
                   { value: "all", label: "Tous" },
                   { value: "favorites", label: "Favoris" },
+                  { value: "incidents", label: "Incidents" },
                 ]}
                 value={filterMode}
-                onValueChange={setFilterMode}
+                onValueChange={(value) =>
+                  setFilterMode(value as "all" | "favorites" | "incidents")
+                }
                 className='w-full'
                 darkMode={darkMode}
               />
@@ -903,249 +1364,301 @@ export default function MapApp() {
 
           <div className='flex-1 overflow-y-auto p-4'>
             <div className='space-y-2'>
-              {filteredPlanifications.map((item: any, index: number) => {
-                // Handle parking locations
-                if (item.type === "parking") {
-                  const parking = item.parking;
-                  return (
-                    <div
-                      key={item.id}
-                      className={`p-3 rounded-lg border transition-all relative ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 hover:bg-blue-900/20 hover:border-blue-500"
-                          : "bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
-                      }`}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (
-                            confirm(
-                              "Are you sure you want to delete this parking location?"
-                            )
-                          ) {
-                            deleteParkingLocation(parking.id);
-                          }
-                        }}
-                        className={`absolute top-2 right-2 p-1 rounded-full ${
-                          darkMode ? "hover:bg-gray-600" : "hover:bg-gray-200"
-                        } transition-colors`}
-                        title='Delete parking location'
+              {filterMode === "incidents" ? (
+                incidents.map(renderIncidentSidebarItem)
+              ) : (
+                <>
+                  {filterMode === "all" && incidents.length > 0 && (
+                    <div className='space-y-2 mb-4'>
+                      <p
+                        className={`text-xs font-semibold uppercase tracking-wider px-1 ${
+                          darkMode ? "text-orange-400" : "text-orange-600"
+                        }`}
                       >
-                        <X className='h-4 w-4 text-gray-400 hover:text-red-500' />
-                      </button>
-                      <div
-                        className='space-y-1 pr-8 cursor-pointer'
-                        onClick={() => {
-                          // Zoom to parking location and select it
-                          setSearchLocation(null); // Clear search location to avoid showing search marker
-                          setSelectedParkingLocationId(parking.id);
-                          // Set search location for zooming, but clear it after a moment so parking popup shows
-                          setSearchLocation({
-                            lat: parking.latitude,
-                            lng: parking.longitude,
-                            zoom: 18,
-                          });
-                          // Clear search location after map has zoomed so parking popup shows
-                          setTimeout(() => {
-                            setSearchLocation(null);
-                          }, 500);
-                          setSidebarOpen(false);
-                        }}
-                      >
-                        <div className='flex items-center gap-2'>
-                          <div
-                            className={`flex items-center justify-center w-6 h-6 rounded-full ${
-                              darkMode ? "bg-blue-600" : "bg-blue-500"
-                            } text-white text-xs font-bold`}
+                        Signalements récents
+                      </p>
+                      {incidents.map(renderIncidentSidebarItem)}
+                    </div>
+                  )}
+                  {filteredPlanifications.map((item: any, index: number) => {
+                    // Handle parking locations
+                    if (item.type === "parking") {
+                      const parking = item.parking;
+                      return (
+                        <div
+                          key={item.id}
+                          className={`p-3 rounded-lg border transition-all relative ${
+                            darkMode
+                              ? "bg-gray-700 border-gray-600 hover:bg-blue-900/20 hover:border-blue-500"
+                              : "bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
+                          }`}
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (
+                                confirm(
+                                  "Are you sure you want to delete this parking location?",
+                                )
+                              ) {
+                                deleteParkingLocation(parking.id);
+                              }
+                            }}
+                            className={`absolute top-2 right-2 p-1 rounded-full ${
+                              darkMode
+                                ? "hover:bg-gray-600"
+                                : "hover:bg-gray-200"
+                            } transition-colors`}
+                            title='Delete parking location'
                           >
-                            P
+                            <X className='h-4 w-4 text-gray-400 hover:text-red-500' />
+                          </button>
+                          <div
+                            className='space-y-1 pr-8 cursor-pointer'
+                            onClick={() => {
+                              // Zoom to parking location and select it
+                              setSearchLocation(null); // Clear search location to avoid showing search marker
+                              setSelectedParkingLocationId(parking.id);
+                              // Set search location for zooming, but clear it after a moment so parking popup shows
+                              setSearchLocation({
+                                lat: parking.latitude,
+                                lng: parking.longitude,
+                                zoom: 18,
+                              });
+                              // Clear search location after map has zoomed so parking popup shows
+                              setTimeout(() => {
+                                setSearchLocation(null);
+                              }, 500);
+                              setSidebarOpen(false);
+                            }}
+                          >
+                            <div className='flex items-center gap-2'>
+                              <div
+                                className={`flex items-center justify-center w-6 h-6 rounded-full ${
+                                  darkMode ? "bg-blue-600" : "bg-blue-500"
+                                } text-white text-xs font-bold`}
+                              >
+                                P
+                              </div>
+                              <p
+                                className={`font-medium text-sm ${
+                                  darkMode ? "text-gray-100" : "text-gray-900"
+                                }`}
+                              >
+                                {parking.name || "Parking Location"}
+                              </p>
+                            </div>
+                            {parking.notes && (
+                              <p
+                                className={`text-xs ${
+                                  darkMode ? "text-gray-300" : "text-gray-600"
+                                }`}
+                              >
+                                {parking.notes}
+                              </p>
+                            )}
+                            <p
+                              className={`text-xs ${
+                                darkMode ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              {parking.latitude.toFixed(5)},{" "}
+                              {parking.longitude.toFixed(5)}
+                            </p>
+                            <p
+                              className={`text-xs ${
+                                darkMode ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              {new Date(parking.created_at).toLocaleString()}
+                            </p>
                           </div>
+                        </div>
+                      );
+                    }
+
+                    // Handle regular planifications
+                    const planif = item;
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg border transition-all relative ${
+                          selectedPlanif === planif
+                            ? darkMode
+                              ? "bg-blue-900/30 border-blue-500"
+                              : "bg-blue-50 border-blue-300"
+                            : darkMode
+                              ? "bg-gray-700 border-gray-600 hover:bg-blue-900/20 hover:border-blue-500"
+                              : "bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
+                        }`}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(planif.coteRueId);
+                          }}
+                          className={`absolute top-2 right-2 p-1 rounded-full ${
+                            darkMode ? "hover:bg-gray-600" : "hover:bg-gray-200"
+                          } transition-colors`}
+                        >
+                          <Heart
+                            className={`h-4 w-4 ${
+                              favorites.has(planif.coteRueId)
+                                ? "fill-red-500 text-red-500"
+                                : "text-gray-400"
+                            }`}
+                          />
+                        </button>
+                        <div
+                          className='space-y-1 pr-8 cursor-pointer'
+                          onClick={() => {
+                            setSelectedPlanif(planif);
+                            setZoomTrigger((prev) => prev + 1);
+                            setSidebarOpen(false);
+                          }}
+                        >
                           <p
                             className={`font-medium text-sm ${
                               darkMode ? "text-gray-100" : "text-gray-900"
                             }`}
                           >
-                            {parking.name || "Parking Location"}
+                            {planif.streetFeature?.properties?.NOM_VOIE}{" "}
+                            {planif.streetFeature?.properties?.TYPE_F}
                           </p>
-                        </div>
-                        {parking.notes && (
-                          <p
-                            className={`text-xs ${
-                              darkMode ? "text-gray-300" : "text-gray-600"
-                            }`}
-                          >
-                            {parking.notes}
-                          </p>
-                        )}
-                        <p
-                          className={`text-xs ${
-                            darkMode ? "text-gray-400" : "text-gray-500"
-                          }`}
-                        >
-                          {parking.latitude.toFixed(5)},{" "}
-                          {parking.longitude.toFixed(5)}
-                        </p>
-                        <p
-                          className={`text-xs ${
-                            darkMode ? "text-gray-400" : "text-gray-500"
-                          }`}
-                        >
-                          {new Date(parking.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Handle regular planifications
-                const planif = item;
-                return (
-                  <div
-                    key={index}
-                    className={`p-3 rounded-lg border transition-all relative ${
-                      selectedPlanif === planif
-                        ? darkMode
-                          ? "bg-blue-900/30 border-blue-500"
-                          : "bg-blue-50 border-blue-300"
-                        : darkMode
-                        ? "bg-gray-700 border-gray-600 hover:bg-blue-900/20 hover:border-blue-500"
-                        : "bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
-                    }`}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(planif.coteRueId);
-                      }}
-                      className={`absolute top-2 right-2 p-1 rounded-full ${
-                        darkMode ? "hover:bg-gray-600" : "hover:bg-gray-200"
-                      } transition-colors`}
-                    >
-                      <Heart
-                        className={`h-4 w-4 ${
-                          favorites.has(planif.coteRueId)
-                            ? "fill-red-500 text-red-500"
-                            : "text-gray-400"
-                        }`}
-                      />
-                    </button>
-                    <div
-                      className='space-y-1 pr-8 cursor-pointer'
-                      onClick={() => {
-                        setSelectedPlanif(planif);
-                        setZoomTrigger((prev) => prev + 1);
-                        setSidebarOpen(false);
-                      }}
-                    >
-                      <p
-                        className={`font-medium text-sm ${
-                          darkMode ? "text-gray-100" : "text-gray-900"
-                        }`}
-                      >
-                        {planif.streetFeature?.properties?.NOM_VOIE}{" "}
-                        {planif.streetFeature?.properties?.TYPE_F}
-                      </p>
-                      <div className='flex items-center gap-2'>
-                        <div
-                          className='w-3 h-3 rounded-full'
-                          style={{
-                            backgroundColor: getEtatDeneigColor(
-                              planif.etatDeneig
-                            ),
-                          }}
-                        />
-                        <p
-                          className={`text-xs ${
-                            darkMode ? "text-gray-300" : "text-gray-600"
-                          }`}
-                        >
-                          <span className='font-medium'>
-                            {getEtatDeneigStatus(planif.etatDeneig)}
-                          </span>
-                        </p>
-                      </div>
-                      <p
-                        className={`text-xs ${
-                          darkMode ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      >
-                        {planif.streetFeature?.properties?.NOM_VILLE} •{" "}
-                        {planif.streetFeature?.properties?.COTE}
-                      </p>
-                      {/* 
-                        Only show the address if the value is not 0 or undefined/null.
-                        Prevents rendering "0" as a valid address.
-                      */}
-                      {planif.streetFeature?.properties?.DEBUT_ADRESSE !==
-                        undefined &&
-                        planif.streetFeature?.properties?.DEBUT_ADRESSE !==
-                          null &&
-                        Number(
-                          planif.streetFeature?.properties?.DEBUT_ADRESSE
-                        ) !== 0 && (
+                          <div className='flex items-center gap-2'>
+                            <div
+                              className='w-3 h-3 rounded-full'
+                              style={{
+                                backgroundColor: getEtatDeneigColor(
+                                  planif.etatDeneig,
+                                ),
+                              }}
+                            />
+                            <p
+                              className={`text-xs ${
+                                darkMode ? "text-gray-300" : "text-gray-600"
+                              }`}
+                            >
+                              <span className='font-medium'>
+                                {getEtatDeneigStatus(planif.etatDeneig)}
+                              </span>
+                            </p>
+                          </div>
                           <p
                             className={`text-xs ${
                               darkMode ? "text-gray-400" : "text-gray-500"
                             }`}
                           >
-                            Address:{" "}
-                            {planif.streetFeature?.properties?.DEBUT_ADRESSE}
+                            {planif.streetFeature?.properties?.NOM_VILLE} •{" "}
+                            {planif.streetFeature?.properties?.COTE}
                           </p>
-                        )}
-                    </div>
-                  </div>
-                );
-              })}
-              {filteredPlanifications.length === 0 && !loading && (
-                <div className='text-center py-12'>
-                  {filterMode === "favorites" ? (
-                    <>
-                      <Heart
-                        className={`h-12 w-12 ${
-                          darkMode ? "text-gray-600" : "text-gray-300"
-                        } mx-auto mb-3`}
-                      />
-                      <p
-                        className={`text-sm ${
-                          darkMode ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      >
-                        Aucun favori pour l’instant
-                      </p>
-                      <p
-                        className={`text-xs ${
-                          darkMode ? "text-gray-500" : "text-gray-400"
-                        } mt-1`}
-                      >
-                        Cliquez sur l’icône le coeur pour ajouter aux favoris
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Snowflake
-                        className={`h-12 w-12 ${
-                          darkMode ? "text-gray-600" : "text-gray-300"
-                        } mx-auto mb-3`}
-                      />
-                      <p
-                        className={`text-sm ${
-                          darkMode ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      >
-                        Aucune planification disponible
-                      </p>
-                      <p
-                        className={`text-xs ${
-                          darkMode ? "text-gray-500" : "text-gray-400"
-                        } mt-1`}
-                      >
-                        Rafraîchir les données
-                      </p>
-                    </>
-                  )}
-                </div>
+                          {/* 
+                        Only show the address if the value is not 0 or undefined/null.
+                        Prevents rendering "0" as a valid address.
+                      */}
+                          {planif.streetFeature?.properties?.DEBUT_ADRESSE !==
+                            undefined &&
+                            planif.streetFeature?.properties?.DEBUT_ADRESSE !==
+                              null &&
+                            Number(
+                              planif.streetFeature?.properties?.DEBUT_ADRESSE,
+                            ) !== 0 && (
+                              <p
+                                className={`text-xs ${
+                                  darkMode ? "text-gray-400" : "text-gray-500"
+                                }`}
+                              >
+                                Address:{" "}
+                                {
+                                  planif.streetFeature?.properties
+                                    ?.DEBUT_ADRESSE
+                                }
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
               )}
+              {((filterMode === "incidents" && incidents.length === 0) ||
+                (filterMode === "all" &&
+                  filteredPlanifications.length === 0 &&
+                  incidents.length === 0) ||
+                (filterMode === "favorites" &&
+                  filteredPlanifications.length === 0)) &&
+                !loading && (
+                  <div className='text-center py-12'>
+                    {filterMode === "incidents" ? (
+                      <>
+                        <Construction
+                          className={`h-12 w-12 ${
+                            darkMode ? "text-gray-600" : "text-gray-300"
+                          } mx-auto mb-3`}
+                        />
+                        <p
+                          className={`text-sm ${
+                            darkMode ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          Aucun signalement pour l’instant
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            darkMode ? "text-gray-500" : "text-gray-400"
+                          } mt-1`}
+                        >
+                          Activez le mode nid-de-poule sur la carte pour en
+                          ajouter
+                        </p>
+                      </>
+                    ) : filterMode === "favorites" ? (
+                      <>
+                        <Heart
+                          className={`h-12 w-12 ${
+                            darkMode ? "text-gray-600" : "text-gray-300"
+                          } mx-auto mb-3`}
+                        />
+                        <p
+                          className={`text-sm ${
+                            darkMode ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          Aucun favori pour l’instant
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            darkMode ? "text-gray-500" : "text-gray-400"
+                          } mt-1`}
+                        >
+                          Cliquez sur l’icône le coeur pour ajouter aux favoris
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Snowflake
+                          className={`h-12 w-12 ${
+                            darkMode ? "text-gray-600" : "text-gray-300"
+                          } mx-auto mb-3`}
+                        />
+                        <p
+                          className={`text-sm ${
+                            darkMode ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          Aucune planification disponible
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            darkMode ? "text-gray-500" : "text-gray-400"
+                          } mt-1`}
+                        >
+                          Rafraîchir les données
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
             </div>
           </div>
 
@@ -1163,49 +1676,69 @@ export default function MapApp() {
                   darkMode
                     ? "border-gray-600 bg-gray-700/50"
                     : "border-gray-300 bg-gray-50"
-                } p-6 text-center transition-all hover:border-opacity-80`}
+                } p-4 text-center transition-all hover:border-opacity-80 overflow-hidden`}
               >
                 <p
                   className={`text-xs font-semibold uppercase tracking-wider mb-2 ${
                     darkMode ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  Espace Publicitaire
+                  {SPONSOR_AD
+                    ? "Espace Publicitaire"
+                    : "Espace Publicitaire (vide)"}
                 </p>
-                <div
-                  className={`h-24 flex items-center justify-center rounded ${
-                    darkMode ? "bg-gray-800" : "bg-white"
-                  }`}
-                >
-                  <p
-                    className={`text-sm ${
-                      darkMode ? "text-gray-500" : "text-gray-400"
-                    }`}
+                {SPONSOR_AD ? (
+                  <a
+                    href={SPONSOR_AD.href}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='block'
                   >
-                    Emplacement sponsor disponible
-                  </p>
-                </div>
-                <p
-                  className={`text-xs mt-2 ${
-                    darkMode ? "text-gray-500" : "text-gray-400"
-                  }`}
-                >
-                  Contactez-nous pour réserver
-                </p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={SPONSOR_AD.imageUrl}
+                      alt={SPONSOR_AD.label ?? "Publicité"}
+                      className='h-28 w-full rounded object-contain'
+                    />
+                  </a>
+                ) : (
+                  <>
+                    <div
+                      className={`relative h-28 w-full overflow-hidden rounded ${
+                        darkMode ? "bg-gray-800" : "bg-white"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        key={NO_SPONSOR_MEMES[memeIndex].src}
+                        src={NO_SPONSOR_MEMES[memeIndex].src}
+                        alt={NO_SPONSOR_MEMES[memeIndex].alt}
+                        className='h-full w-full object-cover'
+                      />
+                    </div>
+                    <p
+                      className={`text-xs mt-2 ${
+                        darkMode ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      {NO_SPONSOR_MEMES[memeIndex].caption}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </aside>
 
         <main className='flex-1 relative'>
-          {/* Parking Mode Toggle Button */}
-          <div className='absolute top-4 right-4 z-10'>
+          {/* Map mode toggle buttons */}
+          <div className='absolute top-4 right-4 z-10 flex flex-col gap-2'>
             <Button
               onClick={() => {
                 const newValue = !parkingModeEnabled;
                 setParkingModeEnabled(newValue);
                 if (newValue) {
-                  // Show message for 5 seconds when parking mode is enabled
+                  setPotholeModeEnabled(false);
                   setShowParkingMessage(true);
                   setTimeout(() => {
                     setShowParkingMessage(false);
@@ -1226,10 +1759,36 @@ export default function MapApp() {
             >
               <Car className='h-5 w-5' />
             </Button>
+            <Button
+              onClick={() => {
+                const newValue = !potholeModeEnabled;
+                setPotholeModeEnabled(newValue);
+                if (newValue) {
+                  setParkingModeEnabled(false);
+                  setShowPotholeMessage(true);
+                  setTimeout(() => {
+                    setShowPotholeMessage(false);
+                  }, 5000);
+                }
+              }}
+              className={`shadow-lg transition-all ${
+                potholeModeEnabled
+                  ? "bg-orange-600 hover:bg-orange-700 text-white"
+                  : "bg-[#6b7280] hover:bg-[#4b5563] text-white"
+              }`}
+              size='icon'
+              title={
+                potholeModeEnabled
+                  ? "Cliquez sur une rue pour signaler (cliquez à nouveau pour désactiver)"
+                  : "Signaler un nid-de-poule"
+              }
+            >
+              <Construction className='h-5 w-5' />
+            </Button>
           </div>
 
           {/* Stack Menu Button */}
-          <div className='absolute top-20 right-4 z-20 stack-menu-container'>
+          <div className='absolute top-28 right-4 z-20 stack-menu-container'>
             <div className='relative'>
               <Button
                 onClick={() => setShowStackMenu(!showStackMenu)}
@@ -1271,8 +1830,8 @@ export default function MapApp() {
                           ? "bg-[#22c55e] hover:bg-[#16a34a] text-white"
                           : "bg-[#22c55e] hover:bg-[#16a34a] text-white"
                         : darkMode
-                        ? "hover:bg-gray-700 text-gray-100"
-                        : "hover:bg-gray-50 text-gray-900"
+                          ? "hover:bg-gray-700 text-gray-100"
+                          : "hover:bg-gray-50 text-gray-900"
                     }`}
                   >
                     <Car className='h-4 w-4 shrink-0' />
@@ -1302,8 +1861,8 @@ export default function MapApp() {
                           ? "bg-blue-600 hover:bg-blue-700 text-white border-gray-700"
                           : "bg-blue-600 hover:bg-blue-700 text-white border-gray-200"
                         : darkMode
-                        ? "hover:bg-gray-700 text-gray-100 border-gray-700"
-                        : "hover:bg-gray-50 text-gray-900 border-gray-200"
+                          ? "hover:bg-gray-700 text-gray-100 border-gray-700"
+                          : "hover:bg-gray-50 text-gray-900 border-gray-200"
                     }`}
                   >
                     <MapPin className='h-4 w-4 shrink-0' />
@@ -1331,6 +1890,21 @@ export default function MapApp() {
               )}
             </div>
           </div>
+
+          {/* Pothole Mode Message */}
+          {showPotholeMessage && (
+            <div className='absolute top-4 left-4 right-20 md:left-1/2 md:-translate-x-1/2 md:right-auto md:w-full md:max-w-md z-50'>
+              <div className='mt-14'>
+                <div
+                  className={`rounded-lg shadow-lg px-4 py-3 animate-in fade-in slide-in-from-top-2 bg-orange-600 text-white`}
+                >
+                  <p className='text-sm font-medium'>
+                    Cliquez sur la carte pour signaler un nid-de-poule
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Parking Mode Message */}
           {showParkingMessage && (
@@ -1455,7 +2029,7 @@ export default function MapApp() {
 
           {initialCenter ? (
             <SnowMap
-              planifications={planifications}
+              planifications={planificationsForMap}
               selectedPlanification={selectedPlanif}
               darkMode={darkMode}
               searchLocation={searchLocation}
@@ -1468,11 +2042,15 @@ export default function MapApp() {
               onBoundsChange={handleBoundsChange}
               enableDynamicFetching={true}
               onMapClick={handleMapClick}
+              incidentReportModeEnabled={potholeModeEnabled}
+              onIncidentStreetSelect={handleIncidentStreetSelect}
               parkingLocations={parkingLocations}
               onParkingLocationDelete={deleteParkingLocation}
               selectedParkingLocationId={selectedParkingLocationId}
               loading={loading}
               municipalParking={municipalParkingEnabled ? municipalParking : []}
+              incidents={incidents}
+              onIncidentMarkerClick={handleIncidentMarkerClick}
             />
           ) : (
             <div className='relative w-full h-full'>
@@ -1605,6 +2183,326 @@ export default function MapApp() {
               </div>
             </div>
           )}
+
+          {/* Incidents list for a street */}
+          <Dialog
+            open={showIncidentsListDialog}
+            onOpenChange={(open) => {
+              setShowIncidentsListDialog(open);
+              if (!open && !reopenIncidentsListAfterReport) {
+                setListIncidentsCoteRueId(null);
+                setListIncidentsStreetLabel(null);
+              }
+            }}
+          >
+            <DialogContent
+              className={`max-w-lg ${darkMode ? "bg-gray-800" : ""}`}
+            >
+              <DialogHeader>
+                <DialogTitle className={darkMode ? "text-gray-100" : ""}>
+                  Signalements — {listIncidentsStreetLabel ?? "Rue"}
+                </DialogTitle>
+                <DialogDescription className={darkMode ? "text-gray-400" : ""}>
+                  {incidentsForList.length}{" "}
+                  {incidentsForList.length === 1
+                    ? "signalement enregistré"
+                    : "signalements enregistrés"}{" "}
+                  pour cette rue.
+                </DialogDescription>
+              </DialogHeader>
+              <div className='max-h-[60vh] overflow-y-auto space-y-3 py-2'>
+                {incidentsForList.length === 0 ? (
+                  <p
+                    className={`text-sm ${
+                      darkMode ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Aucun signalement pour cette rue.
+                  </p>
+                ) : (
+                  incidentsForList.map((incident) => (
+                    <div
+                      key={incident.id}
+                      className={`rounded-lg border p-3 space-y-2 ${
+                        darkMode
+                          ? "border-gray-600 bg-gray-700/50"
+                          : "border-gray-200 bg-gray-50"
+                      }`}
+                    >
+                      {incident.photo_url && (
+                        <a
+                          href={incident.photo_url}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='block'
+                        >
+                          <img
+                            src={incident.photo_url}
+                            alt='Photo du signalement'
+                            className='w-full h-40 object-cover rounded-md border'
+                          />
+                        </a>
+                      )}
+                      <div className='flex flex-wrap items-center gap-2 text-sm'>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            incident.priority === "high"
+                              ? "bg-red-100 text-red-800"
+                              : incident.priority === "medium"
+                                ? "bg-orange-100 text-orange-800"
+                                : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          Priorité :{" "}
+                          {INCIDENT_PRIORITY_LABELS[incident.priority]}
+                        </span>
+                        <span
+                          className={`text-xs ${
+                            darkMode ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          Nid-de-poule
+                        </span>
+                        {incident.is_approved && (
+                          <span className='rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800'>
+                            Approuvé
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        className={`text-xs ${
+                          darkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {new Date(incident.created_at).toLocaleString("fr-CA")}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+              <DialogFooter className='flex-col gap-2 sm:flex-row sm:justify-between'>
+                <Button
+                  onClick={handleAddIncidentFromList}
+                  className='w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white'
+                >
+                  <Construction className='h-4 w-4 mr-2' />
+                  Ajouter un signalement
+                </Button>
+                <Button
+                  variant='outline'
+                  onClick={() => setShowIncidentsListDialog(false)}
+                  className={
+                    darkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600"
+                      : ""
+                  }
+                >
+                  Fermer
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Pothole Issue Dialog */}
+          <Dialog
+            open={showPotholeDialog}
+            onOpenChange={(open) => {
+              setShowPotholeDialog(open);
+              if (!open) {
+                if (
+                  reopenIncidentsListAfterReport &&
+                  listIncidentsCoteRueId != null
+                ) {
+                  setShowIncidentsListDialog(true);
+                  setReopenIncidentsListAfterReport(false);
+                }
+                resetPotholeForm();
+              }
+            }}
+          >
+            <DialogContent className={darkMode ? "bg-gray-800" : ""}>
+              <DialogHeader>
+                <DialogTitle className={darkMode ? "text-gray-100" : ""}>
+                  Signaler un nid-de-poule
+                </DialogTitle>
+                <DialogDescription className={darkMode ? "text-gray-400" : ""}>
+                  {reopenIncidentsListAfterReport
+                    ? "Ajoutez une photo et la priorité pour ce signalement sur la rue sélectionnée."
+                    : "Cliquez sur la carte pour choisir l'emplacement, puis ajoutez une photo et la priorité du signalement."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className='space-y-4 py-4'>
+                {selectedIncidentCoteRueId != null && (
+                  <>
+                    {clickedIncidentLocation && (
+                      <p
+                        className={`text-sm ${
+                          darkMode ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        Emplacement : {clickedIncidentLocation.lat.toFixed(5)},{" "}
+                        {clickedIncidentLocation.lng.toFixed(5)}
+                      </p>
+                    )}
+                    <div className='space-y-2'>
+                      <Label className={darkMode ? "text-gray-200" : ""}>
+                        Rue sélectionnée
+                      </Label>
+                      <Input
+                        readOnly
+                        value={
+                          selectedIncidentStreetLabel ??
+                          String(selectedIncidentCoteRueId)
+                        }
+                        className={
+                          darkMode
+                            ? "bg-gray-700 border-gray-600 text-gray-100"
+                            : "bg-gray-50"
+                        }
+                      />
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label className={darkMode ? "text-gray-200" : ""}>
+                        Type
+                      </Label>
+                      <p
+                        className={`text-sm rounded-md border px-3 py-2 ${
+                          darkMode
+                            ? "border-gray-600 bg-gray-700 text-gray-100"
+                            : "border-gray-200 bg-gray-50 text-gray-800"
+                        }`}
+                      >
+                        Nid-de-poule
+                      </p>
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label
+                        className={darkMode ? "text-gray-200" : ""}
+                        htmlFor='pothole-photo'
+                      >
+                        Photo
+                      </Label>
+                      <input
+                        ref={potholePhotoInputRef}
+                        id='pothole-photo'
+                        type='file'
+                        accept='image/*'
+                        capture='environment'
+                        className='hidden'
+                        onChange={handlePotholePhotoChange}
+                      />
+                      {potholePhotoPreview ? (
+                        <div className='relative'>
+                          <img
+                            src={potholePhotoPreview}
+                            alt='Aperçu du nid-de-poule'
+                            className='w-full h-40 object-cover rounded-lg border'
+                          />
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            className='absolute top-2 right-2'
+                            onClick={() => {
+                              if (potholePhotoPreview) {
+                                URL.revokeObjectURL(potholePhotoPreview);
+                              }
+                              setPotholePhoto(null);
+                              setPotholePhotoPreview(null);
+                              if (potholePhotoInputRef.current) {
+                                potholePhotoInputRef.current.value = "";
+                              }
+                            }}
+                          >
+                            Changer
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          type='button'
+                          variant='outline'
+                          className={`w-full h-24 border-dashed ${
+                            darkMode
+                              ? "bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600"
+                              : ""
+                          }`}
+                          onClick={() => potholePhotoInputRef.current?.click()}
+                        >
+                          <div className='flex flex-col items-center gap-2'>
+                            <Upload className='h-5 w-5' />
+                            <span className='text-sm'>Ajouter une photo</span>
+                          </div>
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label
+                        className={darkMode ? "text-gray-200" : ""}
+                        htmlFor='pothole-priority'
+                      >
+                        Priorité
+                      </Label>
+                      <Select
+                        value={potholePriority}
+                        onValueChange={(value: "low" | "medium" | "high") =>
+                          setPotholePriority(value)
+                        }
+                      >
+                        <SelectTrigger
+                          id='pothole-priority'
+                          className={
+                            darkMode
+                              ? "bg-gray-700 border-gray-600 text-gray-100"
+                              : ""
+                          }
+                        >
+                          <SelectValue placeholder='Choisir la priorité' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='low'>Basse</SelectItem>
+                          <SelectItem value='medium'>Moyenne</SelectItem>
+                          <SelectItem value='high'>Haute</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+              </div>
+              <DialogFooter>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    setShowPotholeDialog(false);
+                    resetPotholeForm();
+                  }}
+                  disabled={potholeSaving}
+                  className={
+                    darkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600"
+                      : ""
+                  }
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={savePotholeIssue}
+                  disabled={
+                    potholeSaving || !user || selectedIncidentCoteRueId == null
+                  }
+                  className='bg-orange-600 hover:bg-orange-700 text-white'
+                >
+                  {potholeSaving
+                    ? "Enregistrement..."
+                    : user
+                      ? "Envoyer le signalement"
+                      : "Connexion requise"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Parking Location Dialog */}
           <Dialog open={showParkingDialog} onOpenChange={setShowParkingDialog}>

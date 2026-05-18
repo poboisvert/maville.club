@@ -204,7 +204,7 @@ export function LandingPageTemplate({
       order: summaryOrder,
       component: (
         <section key='summary' className='mb-20'>
-          <div className='bg-blue/10 border-l-4 border-blue p-8 md:p-10 rounded-r-lg'>
+          <div className='bg-brand-blue/10 border-l-4 border-brand-blue p-8 md:p-10 rounded-r-lg'>
             <h2 className='text-2xl md:text-3xl font-bold mb-6 text-slate-800 dark:text-slate-100'>
               Summary
             </h2>
@@ -215,7 +215,7 @@ export function LandingPageTemplate({
               asChild
               variant={ctaButton.variant || "default"}
               size='lg'
-              className='w-full sm:w-auto bg-yellow hover:bg-yellow/90 text-slate-900 font-semibold shadow-md hover:shadow-lg transition-shadow'
+              className='w-full sm:w-auto bg-brand-yellow hover:bg-brand-yellow/90 text-slate-900 font-semibold shadow-md hover:shadow-lg transition-shadow'
             >
               <a href={ctaButton.href}>
                 {ctaButton.text}
@@ -241,7 +241,7 @@ export function LandingPageTemplate({
       order: weatherForecast.order ?? defaultOrders.weatherForecast,
       component: (
         <section key='weatherForecast' className='mb-20'>
-          <div className='bg-blue/10 border-l-4 border-blue p-8 md:p-10 rounded-r-lg'>
+          <div className='bg-brand-blue/10 border-l-4 border-brand-blue p-8 md:p-10 rounded-r-lg'>
             <h2 className='text-2xl md:text-3xl font-bold mb-4 text-slate-800 dark:text-slate-100'>
               {weatherForecast.title || "Weather Forecast"}
             </h2>
@@ -256,7 +256,7 @@ export function LandingPageTemplate({
                 return (
                   <div
                     key={index}
-                    className='bg-white dark:bg-slate-800 border-2 border-blue/30 rounded-lg p-6'
+                    className='bg-white dark:bg-slate-800 border-2 border-brand-blue/30 rounded-lg p-6'
                   >
                     {forecast.date && (
                       <h3 className='text-xl font-bold mb-4 text-slate-800 dark:text-slate-100'>
@@ -267,7 +267,7 @@ export function LandingPageTemplate({
                       {/* Snow Forecast */}
                       {forecast.snow && (
                         <div className='flex items-start gap-3'>
-                          <Snowflake className='h-5 w-5 text-blue mt-1 flex-shrink-0' />
+                          <Snowflake className='h-5 w-5 text-brand-blue mt-1 flex-shrink-0' />
                           <div>
                             <p className='font-semibold text-slate-800 dark:text-slate-100'>
                               Snow
@@ -290,7 +290,7 @@ export function LandingPageTemplate({
                       {/* Rain Forecast */}
                       {forecast.rain && (
                         <div className='flex items-start gap-3'>
-                          <CloudRain className='h-5 w-5 text-blue mt-1 flex-shrink-0' />
+                          <CloudRain className='h-5 w-5 text-brand-blue mt-1 flex-shrink-0' />
                           <div>
                             <p className='font-semibold text-slate-800 dark:text-slate-100'>
                               Rain
@@ -313,7 +313,7 @@ export function LandingPageTemplate({
                       {/* Temperature */}
                       {forecast.temperature && (
                         <div className='flex items-start gap-3'>
-                          <Thermometer className='h-5 w-5 text-orange mt-1 flex-shrink-0' />
+                          <Thermometer className='h-5 w-5 text-brand-orange mt-1 flex-shrink-0' />
                           <div>
                             <p className='font-semibold text-slate-800 dark:text-slate-100'>
                               Temperature
@@ -329,12 +329,12 @@ export function LandingPageTemplate({
                                       forecast.temperature.unit || "C"
                                     }`
                                   : forecast.temperature.high !== undefined
-                                  ? `High: ${forecast.temperature.high}°${
-                                      forecast.temperature.unit || "C"
-                                    }`
-                                  : `Low: ${forecast.temperature.low}°${
-                                      forecast.temperature.unit || "C"
-                                    }`}
+                                    ? `High: ${forecast.temperature.high}°${
+                                        forecast.temperature.unit || "C"
+                                      }`
+                                    : `Low: ${forecast.temperature.low}°${
+                                        forecast.temperature.unit || "C"
+                                      }`}
                               </p>
                             )}
                           </div>
@@ -349,7 +349,7 @@ export function LandingPageTemplate({
               asChild
               variant={ctaButton.variant || "default"}
               size='lg'
-              className='w-full sm:w-auto bg-yellow hover:bg-yellow/90 text-slate-900 font-semibold shadow-md hover:shadow-lg transition-shadow mt-6'
+              className='w-full sm:w-auto bg-brand-yellow hover:bg-brand-yellow/90 text-slate-900 font-semibold shadow-md hover:shadow-lg transition-shadow mt-6'
             >
               <a href={ctaButton.href}>
                 {ctaButton.text}
@@ -380,7 +380,7 @@ export function LandingPageTemplate({
       component: (
         <section
           key='combinedFeatures'
-          className='mb-20 bg-green/5 dark:bg-green/10 py-12 px-6 md:px-8 rounded-lg'
+          className='mb-20 bg-brand-green/5 dark:bg-brand-green/10 py-12 px-6 md:px-8 rounded-lg'
         >
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12'>
             {/* Left Column: What You Get - 1 column layout (stacked) */}
@@ -395,7 +395,7 @@ export function LandingPageTemplate({
                       {whatYouGet.description}
                     </p>
                   )}
-                  <div className='w-24 h-1 bg-green'></div>
+                  <div className='w-24 h-1 bg-brand-green'></div>
                 </div>
                 <ul className='space-y-4'>
                   {whatYouGet.items.map((item, index) => (
@@ -430,7 +430,7 @@ export function LandingPageTemplate({
                       {helpingFor.description}
                     </p>
                   )}
-                  <div className='w-24 h-1 bg-orange'></div>
+                  <div className='w-24 h-1 bg-brand-orange'></div>
                 </div>
                 <ul className='space-y-4'>
                   {helpingFor.items.map((item, index) => (
@@ -465,7 +465,7 @@ export function LandingPageTemplate({
       order: richContentOrder ?? defaultOrders.richContent,
       component: (
         <section key='richContent' className='mb-20'>
-          <div className='bg-slate-50 dark:bg-slate-900/50 border-2 border-green/20 rounded-lg p-8 md:p-10'>
+          <div className='bg-slate-50 dark:bg-slate-900/50 border-2 border-brand-green/20 rounded-lg p-8 md:p-10'>
             <RichText
               content={richContent}
               className='prose prose-lg max-w-none prose-slate dark:prose-invert prose-headings:text-slate-800 dark:prose-headings:text-slate-100 prose-p:text-slate-700 dark:prose-p:text-slate-300'
@@ -487,19 +487,19 @@ export function LandingPageTemplate({
             <h2 className='text-3xl md:text-4xl font-bold mb-3 text-slate-800 dark:text-slate-100'>
               {prosAndCons.title || "Pros and Cons"}
             </h2>
-            <div className='w-24 h-1 bg-blue mx-auto'></div>
+            <div className='w-24 h-1 bg-brand-blue mx-auto'></div>
           </div>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
             {/* Pros */}
-            <div className='bg-green/10 border-2 border-green rounded-lg p-6'>
+            <div className='bg-brand-green/10 border-2 border-brand-green rounded-lg p-6'>
               <h3 className='text-xl font-bold flex items-center gap-2 mb-6 text-slate-800 dark:text-slate-100'>
-                <Check className='h-6 w-6 text-green' />
+                <Check className='h-6 w-6 text-brand-green' />
                 Pros
               </h3>
               <ul className='space-y-4'>
                 {prosAndCons.pros.map((pro, index) => (
                   <li key={index} className='flex items-start gap-3'>
-                    <Check className='h-5 w-5 text-green mt-0.5 flex-shrink-0' />
+                    <Check className='h-5 w-5 text-brand-green mt-0.5 flex-shrink-0' />
                     <span className='text-slate-700 dark:text-slate-300'>
                       {pro}
                     </span>
@@ -546,7 +546,7 @@ export function LandingPageTemplate({
                   <h2 className='text-3xl md:text-4xl font-bold mb-3 text-slate-800 dark:text-slate-100'>
                     {media.title}
                   </h2>
-                  <div className='w-24 h-1 bg-orange mx-auto mb-4'></div>
+                  <div className='w-24 h-1 bg-brand-orange mx-auto mb-4'></div>
                 </>
               )}
               {media.description && (
@@ -560,7 +560,7 @@ export function LandingPageTemplate({
               style={{ paddingBottom: "56.25%" }}
             >
               <iframe
-                className='absolute top-0 left-0 w-full h-full rounded-lg border-2 border-orange/30 shadow-lg'
+                className='absolute top-0 left-0 w-full h-full rounded-lg border-2 border-brand-orange/30 shadow-lg'
                 src={`https://www.youtube.com/embed/${videoId}`}
                 title='YouTube video player'
                 allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
@@ -591,7 +591,7 @@ export function LandingPageTemplate({
                 <h2 className='text-3xl md:text-4xl font-bold mb-3 text-slate-800 dark:text-slate-100'>
                   {imageCarousel.title}
                 </h2>
-                <div className='w-24 h-1 bg-blue mx-auto mb-4'></div>
+                <div className='w-24 h-1 bg-brand-blue mx-auto mb-4'></div>
               </>
             )}
             {imageCarousel.description && (
@@ -614,7 +614,7 @@ export function LandingPageTemplate({
                     key={index}
                     className='md:basis-1/2 lg:basis-1/3'
                   >
-                    <div className='relative aspect-video rounded-lg overflow-hidden border-2 border-blue/30'>
+                    <div className='relative aspect-video rounded-lg overflow-hidden border-2 border-brand-blue/30'>
                       <img
                         src={image.url}
                         alt={image.alt || `Image ${index + 1}`}
@@ -655,7 +655,7 @@ export function LandingPageTemplate({
       className={cn("min-h-screen bg-slate-50 dark:bg-slate-900", className)}
     >
       {/* Navbar */}
-      <nav className='sticky top-0 z-50 bg-white dark:bg-slate-900 border-b-2 border-green/30 shadow-sm'>
+      <nav className='sticky top-0 z-50 bg-white dark:bg-slate-900 border-b-2 border-brand-green/30 shadow-sm'>
         <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-between h-16 md:h-20'>
             {/* Logo */}
@@ -664,7 +664,7 @@ export function LandingPageTemplate({
               className='flex items-center space-x-2 text-slate-900 dark:text-slate-50 hover:opacity-80 transition-opacity'
             >
               <span className='text-xl md:text-2xl font-bold font-patrick-hand'>
-                Neige.app
+                MaVille.club
               </span>
             </Link>
 
@@ -674,14 +674,14 @@ export function LandingPageTemplate({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className='text-slate-700 dark:text-slate-300 hover:text-green dark:hover:text-green font-medium transition-colors text-sm lg:text-base'
+                  className='text-slate-700 dark:text-slate-300 hover:text-brand-green dark:hover:text-brand-green font-medium transition-colors text-sm lg:text-base'
                 >
                   {link.label}
                 </Link>
               ))}
               <Button
                 asChild
-                className='bg-yellow hover:bg-yellow/90 text-slate-900 font-semibold'
+                className='bg-brand-yellow hover:bg-brand-yellow/90 text-slate-900 font-semibold'
               >
                 <Link href='/app'>Get Started</Link>
               </Button>
@@ -689,7 +689,7 @@ export function LandingPageTemplate({
 
             {/* Mobile menu button */}
             <button
-              className='md:hidden p-2 text-slate-700 dark:text-slate-300 hover:text-green transition-colors'
+              className='md:hidden p-2 text-slate-700 dark:text-slate-300 hover:text-brand-green transition-colors'
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label='Toggle menu'
             >
@@ -703,13 +703,13 @@ export function LandingPageTemplate({
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <div className='md:hidden border-t border-green/20 py-4'>
+            <div className='md:hidden border-t border-brand-green/20 py-4'>
               <div className='flex flex-col space-y-4'>
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className='text-slate-700 dark:text-slate-300 hover:text-green dark:hover:text-green font-medium transition-colors px-2 py-1'
+                    className='text-slate-700 dark:text-slate-300 hover:text-brand-green dark:hover:text-brand-green font-medium transition-colors px-2 py-1'
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}
@@ -717,7 +717,7 @@ export function LandingPageTemplate({
                 ))}
                 <Button
                   asChild
-                  className='bg-yellow hover:bg-yellow/90 text-slate-900 font-semibold w-full mt-2'
+                  className='bg-brand-yellow hover:bg-brand-yellow/90 text-slate-900 font-semibold w-full mt-2'
                 >
                   <Link href='/app' onClick={() => setMobileMenuOpen(false)}>
                     Get Started
@@ -747,7 +747,7 @@ export function LandingPageTemplate({
         {/* Content - Slim container */}
         <div className='relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto'>
           <div className='inline-block mb-4'>
-            <div className='w-24 h-1 bg-green mx-auto mb-3'></div>
+            <div className='w-24 h-1 bg-brand-green mx-auto mb-3'></div>
           </div>
           <h1 className='text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white tracking-tight leading-tight drop-shadow-lg'>
             {title}
@@ -757,7 +757,7 @@ export function LandingPageTemplate({
               {subtitle}
             </h2>
           )}
-          <div className='w-20 h-1 bg-blue mx-auto mb-4'></div>
+          <div className='w-20 h-1 bg-brand-blue mx-auto mb-4'></div>
           <p className='text-base md:text-lg text-white/90 max-w-2xl mx-auto leading-relaxed drop-shadow-md'>
             {shortDescription}
           </p>
@@ -767,7 +767,7 @@ export function LandingPageTemplate({
       <div
         className={cn(
           "container mx-auto px-4 py-20 md:py-24 max-w-6xl",
-          containerClassName
+          containerClassName,
         )}
       >
         {/* Render sections in order */}

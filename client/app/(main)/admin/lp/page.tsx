@@ -109,7 +109,7 @@ export default function AdminLandingPagesPage() {
           pages.map((page) => (
             <div
               key={page.id}
-              className="border-2 border-slate-200 dark:border-slate-700 rounded-lg p-6 hover:border-blue transition-colors"
+              className="border-2 border-slate-200 dark:border-slate-700 rounded-lg p-6 hover:border-brand-blue transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">

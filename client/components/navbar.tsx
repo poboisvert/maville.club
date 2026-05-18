@@ -21,7 +21,7 @@ export function Navbar() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <button
-            className='lg:hidden text-yellow hover:text-yellow/80 transition-colors'
+            className='lg:hidden text-white hover:text-brand-yellow transition-colors'
             aria-label='Toggle menu'
           >
             <Menu className='w-6 h-6 drop-shadow-md' />
@@ -29,18 +29,18 @@ export function Navbar() {
         </SheetTrigger>
         <SheetContent
           side='left'
-          className='bg-gradient-to-b from-blue/5 via-white to-white border-0 p-0 overflow-hidden'
+          className='bg-gradient-to-b from-mtl-frost via-white to-white border-0 p-0 overflow-hidden'
         >
           {/* Content */}
           <div className='relative z-10 flex flex-col h-full'>
             {/* Header */}
-            <div className='px-6 pt-8 pb-6 border-b border-blue/10'>
+            <div className='px-6 pt-8 pb-6 border-b border-mtl-blue/10'>
               <a
                 href='/'
-                className='text-yellow text-xl font-medium tracking-wider inline-block'
+                className='text-mtl-blue text-xl font-medium tracking-wider inline-block'
                 onClick={() => setOpen(false)}
               >
-                <span className='font-patrick-hand'>Neige.app</span>
+                <span className='font-patrick-hand'>MaVille.club</span>
               </a>
             </div>
 
@@ -50,7 +50,7 @@ export function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className='block py-3 px-4 rounded-lg text-gray-700 hover:bg-blue/10 hover:text-blue transition-all duration-200 text-base font-light tracking-wide group'
+                  className='block py-3 px-4 rounded-lg text-gray-700 hover:bg-mtl-blue/10 hover:text-mtl-blue transition-all duration-200 text-base font-light tracking-wide group'
                   onClick={() => setOpen(false)}
                   style={{
                     animationDelay: `${index * 50}ms`,
@@ -58,7 +58,7 @@ export function Navbar() {
                 >
                   <span className='relative'>
                     {link.label}
-                    <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-blue transition-all duration-300 group-hover:w-full' />
+                    <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-mtl-blue transition-all duration-300 group-hover:w-full' />
                   </span>
                 </a>
               ))}
@@ -70,9 +70,9 @@ export function Navbar() {
       {/* Logo - left on desktop, right on mobile */}
       <a
         href='/'
-        className='text-yellow text-sm lg:text-base font-medium tracking-wider drop-shadow-lg order-2 lg:order-1'
+        className='text-white text-sm lg:text-base font-medium tracking-wider drop-shadow-lg order-2 lg:order-1 hover:text-brand-yellow transition-colors'
       >
-        <span className='font-patrick-hand'>Neige.app</span>
+        <span className='font-patrick-hand'>MaVille.club</span>
       </a>
 
       {/* Desktop navigation - right */}
@@ -81,7 +81,7 @@ export function Navbar() {
           <a
             key={link.href}
             href={link.href}
-            className='text-yellow hover:text-yellow/80 transition-colors text-sm drop-shadow-md'
+            className='text-white hover:text-brand-yellow transition-colors text-sm drop-shadow-md'
           >
             {link.label}
           </a>

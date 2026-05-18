@@ -1,0 +1,482 @@
+[
+  {
+    "munid": 66023,
+    "coteRueId": 40023462,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40023522,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40101572,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40155382,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40155392,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080842,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080882,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080892,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081492,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081502,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081512,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081522,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16083982,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16084502,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16084522,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40023442,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080852,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080851,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080841,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080881,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16080891,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081491,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081501,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081511,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16081521,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16083981,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16084501,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16084521,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40023441,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 10102901,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16084411,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16084421,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16084531,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16093881,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16094211,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16094361,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16094461,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16094561,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16094571,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16095271,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16095291,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 16095371,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40023451,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40023461,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40023521,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40101581,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40155361,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  },
+  {
+    "munid": 66023,
+    "coteRueId": 40155371,
+    "etatDeneig": 1,
+    "dateDebutPlanif": null,
+    "dateFinPlanif": null,
+    "dateDebutReplanif": null,
+    "dateFinReplanif": null,
+    "dateMaj": "2026-02-02T11:30:09"
+  }
+]

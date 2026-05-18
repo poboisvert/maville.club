@@ -73,6 +73,71 @@ const createParkingIcon = () => {
   });
 };
 
+export interface MapIncident {
+  id: string;
+  cote_rue_id: number;
+  type: string;
+  photo_url: string | null;
+  priority: "low" | "medium" | "high";
+  is_approved: boolean;
+  created_at: string;
+}
+
+const createConstructionIcon = (count: number) => {
+  const badge =
+    count > 1
+      ? `<span style="
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          min-width: 16px;
+          height: 16px;
+          padding: 0 4px;
+          background: #fff;
+          color: #ea580c;
+          border-radius: 9999px;
+          font-size: 10px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #ea580c;
+        ">${count}</span>`
+      : "";
+
+  return L.divIcon({
+    className: "incident-marker",
+    html: `
+      <div style="position: relative; width: 32px; height: 32px;">
+        <div style="
+          background-color: #ea580c;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <path d="M17 6V4a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v2"/>
+            <path d="M6 10h.01"/>
+            <path d="M10 10h.01"/>
+            <path d="M14 10h.01"/>
+            <path d="M18 10h.01"/>
+          </svg>
+        </div>
+        ${badge}
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+};
+
 const createMunicipalParkingIcon = () => {
   return L.divIcon({
     className: "municipal-parking-marker",
@@ -145,11 +210,15 @@ interface SnowMapProps {
   }) => void;
   enableDynamicFetching?: boolean;
   onMapClick?: (lat: number, lng: number) => void;
+  incidentReportModeEnabled?: boolean;
+  onIncidentStreetSelect?: (coteRueId: number, streetLabel?: string) => void;
   parkingLocations?: ParkingLocation[];
   onParkingLocationDelete?: (id: string) => void;
   selectedParkingLocationId?: string | null;
   loading?: boolean;
   municipalParking?: MunicipalParkingLocation[];
+  incidents?: MapIncident[];
+  onIncidentMarkerClick?: (coteRueId: number) => void;
 }
 
 function FitBounds({
@@ -407,6 +476,32 @@ function ParkingMarker({
   );
 }
 
+function IncidentMarker({
+  coteRueId,
+  position,
+  count,
+  onClick,
+}: {
+  coteRueId: number;
+  position: [number, number];
+  count: number;
+  onClick?: (coteRueId: number) => void;
+}) {
+  return (
+    <Marker
+      position={position}
+      icon={createConstructionIcon(count)}
+      zIndexOffset={700}
+      eventHandlers={{
+        click: (e) => {
+          L.DomEvent.stopPropagation(e);
+          onClick?.(coteRueId);
+        },
+      }}
+    />
+  );
+}
+
 function MunicipalParkingMarker({
   parking,
 }: {
@@ -493,6 +588,38 @@ function MunicipalParkingMarker({
   );
 }
 
+function getLineCoordinatesFromGeometry(geometry: {
+  type: string;
+  coordinates: unknown;
+}): [number, number][] {
+  if (geometry.type === "LineString") {
+    const coords = geometry.coordinates;
+    if (
+      Array.isArray(coords) &&
+      coords.length > 0 &&
+      Array.isArray(coords[0]) &&
+      typeof coords[0][0] === "number"
+    ) {
+      return coords as [number, number][];
+    }
+  } else if (geometry.type === "MultiLineString") {
+    const coords = geometry.coordinates as [number, number][][];
+    if (coords.length > 0) {
+      return coords.reduce((longest, current) =>
+        current.length > longest.length ? current : longest,
+      );
+    }
+  }
+  return [];
+}
+
+function getPlanificationMidpoint(planif: PlanificationResponse) {
+  const geometry = planif.streetFeature?.geometry;
+  if (!geometry) return null;
+  const coordinates = getLineCoordinatesFromGeometry(geometry as any);
+  return calculateMidpointOnLine(coordinates);
+}
+
 function calculateMidpointOnLine(
   coordinates: [number, number][]
 ): [number, number] | null {
@@ -575,11 +702,15 @@ export default function SnowMap({
   onBoundsChange,
   enableDynamicFetching = false,
   onMapClick,
+  incidentReportModeEnabled = false,
+  onIncidentStreetSelect,
   parkingLocations = [],
   onParkingLocationDelete,
   selectedParkingLocationId = null,
   loading = false,
   municipalParking = [],
+  incidents = [],
+  onIncidentMarkerClick,
 }: SnowMapProps) {
   const [visibleMarkerCount, setVisibleMarkerCount] = useState(0);
   const markersBatchSize = 50; // Render 50 markers at a time
@@ -613,38 +744,7 @@ export default function SnowMap({
     return planifications
       .filter((p) => p.streetFeature?.geometry?.coordinates)
       .map((p) => {
-        const geometry = p.streetFeature!.geometry as any;
-        let coordinates: [number, number][] = [];
-
-        // Handle LineString (single array of coordinates)
-        if (geometry.type === "LineString") {
-          const coords = geometry.coordinates;
-          if (
-            Array.isArray(coords) &&
-            coords.length > 0 &&
-            Array.isArray(coords[0]) &&
-            typeof coords[0][0] === "number"
-          ) {
-            coordinates = coords as [number, number][];
-          }
-        }
-        // Handle MultiLineString (array of coordinate arrays)
-        else if (geometry.type === "MultiLineString") {
-          const coords = geometry.coordinates;
-          if (Array.isArray(coords) && coords.length > 0) {
-            // Use the first line string, or find the longest one
-            const lineStrings = coords as [number, number][][];
-            if (lineStrings.length > 0) {
-              // Find the longest line string
-              const longestLine = lineStrings.reduce((longest, current) => {
-                return current.length > longest.length ? current : longest;
-              }, lineStrings[0]);
-              coordinates = longestLine;
-            }
-          }
-        }
-
-        const midpoint = calculateMidpointOnLine(coordinates);
+        const midpoint = getPlanificationMidpoint(p);
         if (!midpoint) return null;
 
         return {
@@ -656,6 +756,28 @@ export default function SnowMap({
       })
       .filter((m): m is NonNullable<typeof m> => m !== null);
   }, [planifications, selectedPlanification]);
+
+  const incidentMarkers = useMemo(() => {
+    const countsByCoteRue = new Map<number, number>();
+    for (const incident of incidents) {
+      countsByCoteRue.set(
+        incident.cote_rue_id,
+        (countsByCoteRue.get(incident.cote_rue_id) ?? 0) + 1,
+      );
+    }
+
+    return Array.from(countsByCoteRue.entries())
+      .map(([coteRueId, count]) => {
+        const planif = planifications.find((p) => p.coteRueId === coteRueId);
+        if (!planif) return null;
+
+        const midpoint = getPlanificationMidpoint(planif);
+        if (!midpoint) return null;
+
+        return { coteRueId, position: midpoint, count };
+      })
+      .filter((m): m is NonNullable<typeof m> => m !== null);
+  }, [incidents, planifications]);
 
   // Reset visible count when markers change and gradually render them
   useEffect(() => {
@@ -756,16 +878,33 @@ export default function SnowMap({
     `;
     layer.bindPopup(popupContent);
 
-    if (onPlanificationClick) {
-      layer.on("click", () => {
+    layer.on("click", (e: L.LeafletMouseEvent) => {
+      L.DomEvent.stopPropagation(e);
+
+      const coteRueId = props.coteRueId ?? props.COTE_RUE_ID;
+
+      if (
+        incidentReportModeEnabled &&
+        onIncidentStreetSelect &&
+        coteRueId != null
+      ) {
+        const streetLabel =
+          props.NOM_VOIE && props.TYPE_F
+            ? `${props.NOM_VOIE} ${props.TYPE_F}`
+            : undefined;
+        onIncidentStreetSelect(coteRueId, streetLabel);
+        return;
+      }
+
+      if (onPlanificationClick) {
         const planif = planifications.find(
           (p) => p.coteRueId === props.coteRueId
         );
         if (planif) {
           onPlanificationClick(planif);
         }
-      });
-    }
+      }
+    });
   };
 
   // Don't show empty state while loading - show map tiles instead
@@ -886,6 +1025,15 @@ export default function SnowMap({
       ))}
       {municipalParking.map((parking) => (
         <MunicipalParkingMarker key={parking.id} parking={parking} />
+      ))}
+      {incidentMarkers.map((marker) => (
+        <IncidentMarker
+          key={`incident-${marker.coteRueId}`}
+          coteRueId={marker.coteRueId}
+          position={marker.position}
+          count={marker.count}
+          onClick={onIncidentMarkerClick}
+        />
       ))}
     </MapContainer>
   );

@@ -1,4 +1,4 @@
-# neige.app
+# MaVille.club
 
 ![Preview](preview.png)
 
@@ -267,17 +267,14 @@ PlanifNeige API → Download gbdouble.json → Fetch Planifications → Batch Pr
 **Step-by-step process:**
 
 1. **Download Street Data**: Downloads the latest `gbdouble.json` from Montreal's open data portal
-
    - Source: https://donnees.montreal.ca/dataset/geobase-double
    - Creates a mapping of `cote_rue_id` → GeoJSON features
 
 2. **Fetch Planifications**: Calls PlanifNeige API to get all planifications since the current date
-
    - Uses SOAP API via `zeep` library
    - Retrieves planification data for all street sides
 
 3. **Batch Processing**: Splits planifications into smaller batches (default: 100 items)
-
    - Saves batches as JSON files in `planification_batches/`
    - Enables parallel processing and error recovery
 
@@ -296,20 +293,17 @@ Check if street exists → Upsert street → Check current state → Detect chan
 **Detailed flow:**
 
 1. **Street Validation & Upsert**:
-
    - Checks if `cote_rue_id` exists in `streets` table
    - If missing, attempts to insert from `gbdouble.json` mapping
    - Upserts street with geometry and metadata
    - Uses PostGIS for spatial operations when `DATABASE_URL` is available
 
 2. **State Change Detection**:
-
    - Retrieves current state from `deneigement_current` table
    - Compares `etat_deneig` (state code) with new data
    - Detects if status has changed
 
 3. **Event Logging**:
-
    - If state changed, inserts record into `deneigement_events`
    - Captures both old and new states
    - Records `event_date` from API's `dateMaj` field

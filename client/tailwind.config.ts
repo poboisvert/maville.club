@@ -63,10 +63,23 @@ const config: Config = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
-        green: '#B7C4A0',
-        yellow: '#ECD137',
-        blue: '#9BBCC5',
-        orange: '#F8D198',
+        // Montreal palette: civic blue, flag red, Bonjour yellow, winter neutrals
+        mtl: {
+          blue: '#003DA5',
+          'blue-dark': '#002B75',
+          'blue-light': '#5B8FD4',
+          frost: '#E8F0FA',
+          red: '#C8102E',
+          yellow: '#ECD137',
+          snow: '#F5F8FC',
+        },
+        /** Montreal brand palette — do not override default orange/green/yellow/blue scales */
+        brand: {
+          green: '#B7C4A0',
+          yellow: '#ECD137',
+          blue: '#003DA5',
+          orange: '#F8D198',
+        },
       },
       keyframes: {
         'accordion-down': {
