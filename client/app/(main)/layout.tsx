@@ -40,9 +40,9 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.maville.club"),
 
   openGraph: {
-    title: "MaVille.Club | Suivi du déneigement à Montréal",
+    title: "MaVille.Club | Suivi des incidents à Montréal",
     description:
-      "Suivez le déneigement à Montréal : opérations en cours, alertes neige et état des rues en temps réel avec MaVille.Club.",
+      "Suivi des incidents : opérations en cours, alertes neige et état des rues en temps réel avec MaVille.Club.",
     url: "https://www.maville.club",
     siteName: "MaVille.Club",
     locale: "fr_CA",
@@ -52,16 +52,16 @@ export const metadata: Metadata = {
         url: "https://www.maville.club/logo.png",
         width: 1200,
         height: 630,
-        alt: "MaVille.Club – Déneigement intelligent à Montréal",
+        alt: "MaVille.Club – Suivi des incidents intelligent à Montréal",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "MaVille.Club | Déneigement à Montréal",
+    title: "MaVille.Club | Suivi des incidents",
     description:
-      "Alertes neige, suivi du déneigement et état des rues à Montréal. Simple, clair et en temps réel.",
+      "Alertes neige, Suivi des incidents et état des rues à Montréal. Simple, clair et en temps réel.",
     images: ["https://www.maville.club/logo.png"],
   },
 
