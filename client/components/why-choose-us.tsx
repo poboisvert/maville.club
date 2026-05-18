@@ -111,13 +111,7 @@ function MapChrome() {
   );
 }
 
-function FeaturePanel({
-  feature,
-  index,
-}: {
-  feature: Feature;
-  index: number;
-}) {
+function FeaturePanel({ feature, index }: { feature: Feature; index: number }) {
   const { t } = useTranslation("common");
   const Icon = feature.icon;
   const title = t(`whyChooseUs.${feature.titleKey}`);
@@ -235,7 +229,11 @@ export function WhyChooseUs() {
 
           <div className='relative z-10 grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:gap-5 lg:p-8'>
             {features.map((feature, index) => (
-              <FeaturePanel key={feature.titleKey} feature={feature} index={index} />
+              <FeaturePanel
+                key={feature.titleKey}
+                feature={feature}
+                index={index}
+              />
             ))}
           </div>
 

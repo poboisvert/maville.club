@@ -33,7 +33,7 @@ export function Hero() {
       <Navbar />
 
       <div className='relative z-10 flex flex-col h-full justify-center pt-20 lg:pt-0 bg-black/40'>
-        <div className='flex-1 flex flex-col justify-center items-center px-8 lg:px-16 py-12 max-w-5xl mx-auto text-center'>
+        <div className='flex-1 flex flex-col justify-center items-center px-8 lg:px-16 pt-12 pb-32 sm:py-12 max-w-5xl mx-auto text-center'>
           <div className='mb-6'>
             <div className='text-brand-yellow text-xs lg:text-sm font-medium tracking-widest drop-shadow-lg'>
               {t("hero.tagline")}
@@ -65,7 +65,7 @@ export function Hero() {
             </a>
           </Button>
 
-          <div className='flex flex-wrap justify-center items-center gap-8 mt-16 text-white/90'>
+          <div className='hidden sm:flex flex-wrap justify-center items-center gap-8 mt-16 text-white/90'>
             <div className='flex items-center gap-2'>
               <div className='w-2 h-2 bg-mtl-red rounded-full' />
               <span className='text-xs lg:text-sm font-medium drop-shadow-lg'>
