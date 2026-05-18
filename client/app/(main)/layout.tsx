@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.maville.club/logo.png",
+        url: "https://www.maville.club/og_image.webp",
         width: 1200,
         height: 630,
         alt: "MaVille.Club – Suivi des incidents intelligent à Montréal",
@@ -62,7 +62,11 @@ export const metadata: Metadata = {
     title: "MaVille.Club | Suivi des incidents",
     description:
       "Alertes neige, Suivi des incidents et état des rues à Montréal. Simple, clair et en temps réel.",
-    images: ["https://www.maville.club/logo.png"],
+    images: ["https://www.maville.club/og_image.webp"],
+  },
+
+  icons: {
+    icon: "/favicon.ico",
   },
 
   robots: {
